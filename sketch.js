@@ -29,7 +29,8 @@ function Platform(x, y) {
     this.w = random(300)+60;
     this.h = random(32)+32;
     // Og en tilfældig styrke
-    this.strength = 60*random()-30;
+    this.strength = random([-1, 1]) * random(3, 60);
+    print(this.strength)
 
     this.draw = function() {
         // Tegn rektanglet, hvis farve vil være afhængig af styrken.
