@@ -26,8 +26,8 @@ function Platform(x, y) {
     // Vi giver den positionskoordinater og en bredde og højde
     this.x = x;
     this.y = y;
-    this.w = random(300)+60;
-    this.h = random(32)+32;
+    this.w = random(60, 360);
+    this.h = random(32, 64);
     // Og en tilfældig styrke
     this.strength = random([-1, 1]) * random(3, 60);
     print(this.strength)
