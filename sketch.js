@@ -37,7 +37,7 @@ function Platform(x, y) {
         fill(Math.abs(this.strength)/30 * 255, 0, 200+4*this.strength);
         rect(this.x, this.y, this.w, this.h);
         // Tegn en ghost-platform, så det ligner, de går rundt om skærmen
-        rect(this.x-(Math.sign(this.strength)*width), this.y, this.w, this.h);
+        rect(this.x - width, this.y, this.w, this.h);
 
         // Platformerne bevæger sig i forhold til mic level ganget med dens styrke
         // Så de ikke bevæger sig lige hurtigt
@@ -60,20 +60,6 @@ function Platform(x, y) {
 //Her laver vi en funktion, som kan lave nye platforme. På den måde falder der hele tiden platforme ned.
 function platformMakePlease() {
     platforms.push(new Platform(random(width), -random(200)))
-}
-
-// Denne funktion ændrer draw-funktionen til noget andet, når man dør
-function death() {
-    draw = function() {
-        // Tegn game over skærm
-        background(0, 200, 255);
-        fill(255, 0, 0);
-        text("Game over!", 300, 200);
-        text("R to restart", 300, 230);
-        // Vis stadig point
-        fill(0)
-        text("Points: "+points, 3, 50)
-    }
 }
 
 function keyPressed() {
@@ -112,44 +98,61 @@ function reset() {
     zeroFrame = frameCount;
     yOffset = 0;
     points = 0;
-    draw = draw_normal;
+    state.cur = "normal";
 }
 
-// Den almindelige draw funktion, der skal køres, når man ikke er død
-function draw_normal() {
-    // Opdatér mic-level-variablen
+var state = {
+    // Den nurværende state, der skal køres hver frame
+    cur: "normal",
+    // Den almindelige draw funktion, der skal køres, når man ikke er død
+    normal: function() {
+        // Sørg for at hovedet kroppen forsvinder efter 200 frames
+        if (frameCount-zeroFrame > 200) {
+            yOffset += 1.5;
+        }
+        // Tegn kroppen
+        image(dude, width/2-20, height-87.5+yOffset);
+        // Lav en platform hver 150'ende frame
+        if (frameCount % 150 == 0)
+        platformMakePlease()
+        player.draw();
+        platforms.forEach(function(p, i) {
+            // Bevæg dem kun efter 200'ende frame
+            // Så de bevæger sig sammen med kroppen.
+            if (frameCount-zeroFrame > 200)
+            p.y += 1.5;
+            p.draw();
+            // Hvis hovedet rør en platform, skal vi dø
+            if (p.collides()) {
+                state.cur = "dead"
+            }
+            // Slet platforme, der er udenfor canvas'et
+            if (p.y > height) {
+                delete platforms[i]
+                points++;
+            }
+        })
+    },
+    // Gameoverskærmen
+    dead: function() {
+        // Tegn lydstyrkebar
+        fill(0)
+        rect(width-50, height-100, 50, 100)
+        fill(255, 0, 0);
+        rect(width-50, height-100*lvl, 50, 100)
+        // Skriv game over
+        text("Game over!", 300, 200);
+        text("R to restart", 300, 230);
+    }
+}
+
+function draw() {
+    // Opdatér mic-level-variablen (0 til 1)
     lvl = mic.getLevel();
     background(0, 200, 255);
-    // Sørg for at hovedet kroppen forsvinder efter 200 frames
-    if (frameCount-zeroFrame > 200) {
-        yOffset += 1.5;
-    }
-    // Tegn kroppen
-    image(dude, width/2-20, height-87.5+yOffset);
-    // Lav en platform hver 150'ende frame
-    if (frameCount % 150 == 0)
-        platformMakePlease()
-    player.draw();
-    platforms.forEach(function(p, i) {
-        // Bevæg dem kun efter 200'ende frame
-        // Så de bevæger sig sammen med kroppen.
-        if (frameCount-zeroFrame > 200)
-            p.y += 1.5;
-        p.draw();
-        // Hvis hovedet rør en platform, skal vi dø
-        if (p.collides()) {
-            death()
-        }
-        // Slet platforme, der er udenfor canvas'et
-        if (p.y > height) {
-            delete platforms[i]
-            points++;
-        }
-    })
-
+    // Kør nuværende state
+    state[state.cur]()
+    // Skriv point
     fill(0)
     text("Points: "+points, 3, 50)
 }
-
-// Sæt `draw`-funktionen til at være den almindelige (altså den, hvor man ikke er død)
-draw = draw_normal;
