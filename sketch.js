@@ -10,7 +10,7 @@ var player;
 var yOffset = 0;
 var zeroFrame = 0;
 
-//Vi laver en funktion, til at tegne vores spillers krop og hoved seperat.
+//Vi laver et objekt til at tegne vores spillers hoved seperat.
 function Player() {
     this.w = 40;
     this.h = 35;
@@ -21,20 +21,27 @@ function Player() {
     }
 }
 
+// Her definerer vi platform-objektet, så vi kan holde styr på forskellige platforme
 function Platform(x, y) {
+    // Vi giver den positionskoordinater og en bredde og højde
     this.x = x;
     this.y = y;
     this.w = random(300)+60;
     this.h = random(32)+32;
+    // Og en tilfældig styrke
     this.strength = 60*random()-30;
-    console.log(this.strength)
 
     this.draw = function() {
+        // Tegn rektanglet, hvis farve vil være afhængig af styrken.
         fill(Math.abs(this.strength)/30 * 255, 0, 200+4*this.strength);
         rect(this.x, this.y, this.w, this.h);
+        // Tegn en ghost-platform, så det ligner, de går rundt om skærmen
         rect(this.x-(Math.sign(this.strength)*width), this.y, this.w, this.h);
 
+        // Platformerne bevæger sig i forhold til mic level ganget med dens styrke
+        // Så de ikke bevæger sig lige hurtigt
         this.x += width+this.strength*lvl;
+        // Wrap around
         this.x %= width;
     }
 
