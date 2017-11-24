@@ -1,3 +1,8 @@
+/*
+ * Mmmmm, dejlig overkommenteret kode // Lucas
+*/
+
+
 //Vi laver først nogle variabler, som vi senere brugerer i koden.
 var mic;
 var lvl;
@@ -23,17 +28,17 @@ function Platform(x, y) {
     this.h = random(32)+32;
     this.strength = 60*random()-30;
     console.log(this.strength)
-    
+
     this.draw = function() {
         fill(Math.abs(this.strength)/30 * 255, 0, 200+4*this.strength);
         rect(this.x, this.y, this.w, this.h);
         rect(this.x-(Math.sign(this.strength)*width), this.y, this.w, this.h);
-        
+
         this.x += width+this.strength*lvl;
         this.x %= width;
     }
-    
-    //Den her funktiom chcker om hovedet og kasserne rammer hinanden. 
+
+    //Den her funktiom chcker om hovedet og kasserne rammer hinanden.
     this.collides = function() {
         return !(
             this.x > player.x+player.w ||
@@ -44,28 +49,35 @@ function Platform(x, y) {
     }
 }
 
-//Her laver vi en funktion, som kan lave nye platforme. På den måde falder der s´hele tiden platforme ned.
+//Her laver vi en funktion, som kan lave nye platforme. På den måde falder der hele tiden platforme ned.
 function platformMakePlease() {
     platforms.push(new Platform(random(width), -random(200)))
 }
 
+// Denne funktion ændrer draw-funktionen til noget andet, når man dør
 function death() {
     draw = function() {
+        // Tegn game over skærm
         background(0, 200, 255);
         fill(255, 0, 0);
         text("Game over!", 300, 200);
+        text("R to restart", 300, 230);
+        // Vis stadig point
         fill(0)
         text("Points: "+points, 3, 50)
     }
 }
 
 function keyPressed() {
+    // Hold øje med, om R bliver trykket på
     if (keyCode === 82) {
+        // Genstart, hvis R er blevet trykket på
         reset()
         return false;
     }
 }
 
+// Flere globale variabler
 var platforms = [];
 var dude;
 var head;
@@ -75,16 +87,17 @@ function setup() {
     createCanvas(800, 600);
     noStroke();
     textSize(30);
+    // Indlæs billederne
     dude = loadImage("dude.png");
     head = loadImage("head.png");
-    
+
     mic = new p5.AudioIn();
     mic.start();
-    
-    platforms.push(new Platform(random(width), 200));
-    player = new Player();
+
+    reset();
 }
 
+// Reset hele spillet, og sæt den originale `draw`-funktion til.
 function reset() {
     player = new Player();
     platforms = [new Platform(random(width), 200)];
@@ -94,31 +107,41 @@ function reset() {
     draw = draw_normal;
 }
 
+// Den almindelige draw funktion, der skal køres, når man ikke er død
 function draw_normal() {
+    // Opdatér mic-level-variablen
     lvl = mic.getLevel();
     background(0, 200, 255);
+    // Sørg for at hovedet kroppen forsvinder efter 200 frames
     if (frameCount-zeroFrame > 200) {
         yOffset += 1.5;
     }
+    // Tegn kroppen
     image(dude, width/2-20, height-87.5+yOffset);
+    // Lav en platform hver 150'ende frame
     if (frameCount % 150 == 0)
         platformMakePlease()
     player.draw();
     platforms.forEach(function(p, i) {
+        // Bevæg dem kun efter 200'ende frame
+        // Så de bevæger sig sammen med kroppen.
         if (frameCount-zeroFrame > 200)
             p.y += 1.5;
         p.draw();
+        // Hvis hovedet rør en platform, skal vi dø
         if (p.collides()) {
             death()
         }
+        // Slet platforme, der er udenfor canvas'et
         if (p.y > height) {
             delete platforms[i]
             points++;
         }
     })
-    
+
     fill(0)
     text("Points: "+points, 3, 50)
 }
 
+// Sæt `draw`-funktionen til at være den almindelige (altså den, hvor man ikke er død)
 draw = draw_normal;
